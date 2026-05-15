@@ -23,6 +23,10 @@ export default [
       '**/*.stories.tsx',
       'vite.config.ts',
       'vite-env.d.ts',
+      // Build output (gitignored) and tooling config not in tsconfig.
+      'build/**',
+      '.storybook/**',
+      'postcss.config.js',
     ],
   },
   ...flatConfigs.map((config) =>
