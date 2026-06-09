@@ -3128,6 +3128,19 @@ export type GQLNcmecMediaInput = {
   readonly url: Scalars['String']['input'];
 };
 
+/**
+ * How much media a reviewer must classify before an NCMEC report can be sent.
+ * ALL requires every piece of media on the account to be reviewed (the original
+ * behaviour); MINIMUM only requires `minMediaToReview` items, so reviewers
+ * don't have to classify hundreds of items to submit a report.
+ */
+export const GQLNcmecMediaReviewRequirement = {
+  All: 'ALL',
+  Minimum: 'MINIMUM',
+} as const;
+
+export type GQLNcmecMediaReviewRequirement =
+  (typeof GQLNcmecMediaReviewRequirement)[keyof typeof GQLNcmecMediaReviewRequirement];
 export type GQLNcmecOrgSettings = {
   readonly __typename?: 'NcmecOrgSettings';
   readonly companyTemplate?: Maybe<Scalars['String']['output']>;
@@ -3139,6 +3152,8 @@ export type GQLNcmecOrgSettings = {
   readonly defaultInternetDetailType?: Maybe<GQLNcmecInternetDetailType>;
   readonly defaultNcmecQueueId?: Maybe<Scalars['String']['output']>;
   readonly legalUrl?: Maybe<Scalars['String']['output']>;
+  readonly mediaReviewRequirement?: Maybe<GQLNcmecMediaReviewRequirement>;
+  readonly minMediaToReview?: Maybe<Scalars['Int']['output']>;
   readonly moreInfoUrl?: Maybe<Scalars['String']['output']>;
   readonly ncmecAdditionalInfoEndpoint?: Maybe<Scalars['String']['output']>;
   readonly ncmecPreservationEndpoint?: Maybe<Scalars['String']['output']>;
@@ -3157,6 +3172,8 @@ export type GQLNcmecOrgSettingsInput = {
   readonly defaultInternetDetailType?: InputMaybe<GQLNcmecInternetDetailType>;
   readonly defaultNcmecQueueId?: InputMaybe<Scalars['String']['input']>;
   readonly legalUrl?: InputMaybe<Scalars['String']['input']>;
+  readonly mediaReviewRequirement?: InputMaybe<GQLNcmecMediaReviewRequirement>;
+  readonly minMediaToReview?: InputMaybe<Scalars['Int']['input']>;
   readonly moreInfoUrl?: InputMaybe<Scalars['String']['input']>;
   readonly ncmecAdditionalInfoEndpoint?: InputMaybe<Scalars['String']['input']>;
   readonly ncmecPreservationEndpoint?: InputMaybe<Scalars['String']['input']>;
@@ -3258,6 +3275,17 @@ export type GQLOrg = {
   readonly itemTypes: ReadonlyArray<GQLItemType>;
   readonly mrtQueues: ReadonlyArray<GQLManualReviewQueue>;
   readonly name: Scalars['String']['output'];
+  /**
+   * How much media a reviewer must classify before they can send an NCMEC
+   * report for this org. Readable by any org member (not just MANAGE_ORG) so the
+   * NCMEC review UI can enforce the policy. Defaults to ALL when unset.
+   */
+  readonly ncmecMediaReviewRequirement: GQLNcmecMediaReviewRequirement;
+  /**
+   * Minimum number of media items that must be reviewed before sending an NCMEC
+   * report when ncmecMediaReviewRequirement is MINIMUM. Defaults to 1.
+   */
+  readonly ncmecMinMediaToReview: Scalars['Int']['output'];
   readonly ncmecReports: ReadonlyArray<GQLNcmecReport>;
   readonly onCallAlertEmail?: Maybe<Scalars['String']['output']>;
   readonly partialItemsEndpoint?: Maybe<Scalars['String']['output']>;
@@ -6188,6 +6216,7 @@ export type GQLResolversTypes = {
   NcmecInternetDetailType: GQLNcmecInternetDetailType;
   NcmecManualReviewJobPayload: ResolverTypeWrapper<NcmecManualReviewJobPayload>;
   NcmecMediaInput: GQLNcmecMediaInput;
+  NcmecMediaReviewRequirement: GQLNcmecMediaReviewRequirement;
   NcmecOrgSettings: ResolverTypeWrapper<GQLNcmecOrgSettings>;
   NcmecOrgSettingsInput: GQLNcmecOrgSettingsInput;
   NcmecReportedMediaDetails: ResolverTypeWrapper<GQLNcmecReportedMediaDetails>;
@@ -11603,6 +11632,16 @@ export type GQLNcmecOrgSettingsResolvers<
     ParentType,
     ContextType
   >;
+  mediaReviewRequirement?: Resolver<
+    Maybe<GQLResolversTypes['NcmecMediaReviewRequirement']>,
+    ParentType,
+    ContextType
+  >;
+  minMediaToReview?: Resolver<
+    Maybe<GQLResolversTypes['Int']>,
+    ParentType,
+    ContextType
+  >;
   moreInfoUrl?: Resolver<
     Maybe<GQLResolversTypes['String']>,
     ParentType,
@@ -11838,6 +11877,16 @@ export type GQLOrgResolvers<
     ContextType
   >;
   name?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  ncmecMediaReviewRequirement?: Resolver<
+    GQLResolversTypes['NcmecMediaReviewRequirement'],
+    ParentType,
+    ContextType
+  >;
+  ncmecMinMediaToReview?: Resolver<
+    GQLResolversTypes['Int'],
+    ParentType,
+    ContextType
+  >;
   ncmecReports?: Resolver<
     ReadonlyArray<GQLResolversTypes['NCMECReport']>,
     ParentType,
