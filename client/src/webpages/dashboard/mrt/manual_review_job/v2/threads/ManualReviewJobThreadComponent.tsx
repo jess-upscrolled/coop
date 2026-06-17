@@ -234,7 +234,7 @@ export function ManualReviewJobThreadComponent(props: {
         )?.data
       : undefined;
   };
-  if (!data || data.threadHistory.length === 0) {
+  if (!data) {
     return null;
   }
   const newMessages = data.threadHistory
@@ -441,7 +441,13 @@ export function ManualReviewJobThreadComponent(props: {
           className="flex flex-col w-full overflow-auto max-h-[600px] gap-2 p-5"
           ref={scrollViewRef}
         >
-          {threadComponent}
+          {threadComponent.length > 0 ? (
+            threadComponent
+          ) : (
+            <div className="text-left text-gray-500">
+              There is no content in this thread yet
+            </div>
+          )}
         </div>
       </div>
       {isActionable && (
