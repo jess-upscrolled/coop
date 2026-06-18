@@ -234,6 +234,14 @@ export function ManualReviewJobThreadComponent(props: {
         )?.data
       : undefined;
   };
+  if (loading) {
+    return <ComponentLoading />;
+  }
+
+  if (error) {
+    return <div>Error loading user submissions: {error.message}</div>;
+  }
+
   if (!data) {
     return null;
   }
@@ -353,14 +361,6 @@ export function ManualReviewJobThreadComponent(props: {
         : threadTypeName
           ? `${threadTypeName} ID: ${thread.id}`
           : `Thread ID: ${thread.id}`;
-
-  if (loading) {
-    return <ComponentLoading />;
-  }
-
-  if (error) {
-    return <div>Error loading user submissions: {error.message}</div>;
-  }
 
   return (
     <>
