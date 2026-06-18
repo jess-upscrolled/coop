@@ -450,7 +450,7 @@ export function ManualReviewJobThreadComponent(props: {
           )}
         </div>
       </div>
-      {isActionable && (
+      {isActionable && newMessages.length > 0 && (
         <>
           <div className="flex flex-row self-end mt-2">
             <Button
