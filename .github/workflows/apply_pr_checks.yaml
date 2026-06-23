@@ -31,10 +31,21 @@ jobs:
         id: filter
         with:
           filters: |
+            # Changes to the dockerised CI plumbing re-run the jobs that
+            # depend on it, so this workflow, the compose file, and the
+            # Dockerfile are exercised even when no app code changed.
+            docker: &docker
+              - 'docker-compose.yaml'
+              - 'Dockerfile'
+              - '.env.githubci'
+              - '.github/workflows/apply_pr_checks.yaml'
+              - '.github/actions/prepare-docker-images/**'
             server:
               - 'server/**'
+              - *docker
             client:
               - 'client/**'
+              - *docker
             db:
               - 'db/**'
             migrator:
@@ -70,6 +81,10 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+      - name: Prepare Docker images
+        uses: ./.github/actions/prepare-docker-images
+        with:
+          build: codegen-check
       - name: Check generated GraphQL is up to date
         run: docker compose run --rm --quiet-pull codegen-check
 
@@ -172,6 +187,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Prepare Docker images
+        uses: ./.github/actions/prepare-docker-images
+        with:
+          pull: postgres scylla clickhouse redis
+          build: backend test
+
       - name: Lint
         run: docker compose run --rm --quiet-pull backend npm run lint
 
@@ -209,6 +230,11 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+
+      - name: Prepare Docker images
+        uses: ./.github/actions/prepare-docker-images
+        with:
+          build: client
 
       - name: Lint client
         run: docker compose run --rm --quiet-pull client npm run lint
