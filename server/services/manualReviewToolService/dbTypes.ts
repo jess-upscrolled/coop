@@ -6,6 +6,7 @@ import {
 } from '../../storage/dataWarehouse/warehouseDateTypes.js';
 import { type JsonOf } from '../../utils/encoding.js';
 import { type ConditionSetWithResultAsLogged } from '../analyticsLoggers/ruleExecutionLoggingUtils.js';
+import { type CoreAppTablesPg } from '../coreAppTables.js';
 import { type NormalizedItemData } from '../itemProcessingService/toNormalizedItemDataOrErrors.js';
 import {
   type ConditionSet,
@@ -74,6 +75,8 @@ export type RoutingRuleExecutionsRow = {
 );
 
 export type ManualReviewToolServicePg = {
+  // Shared with CoreAppTablesPg so org-scoping checks can query public.users.
+  'public.users': CoreAppTablesPg['public.users'];
   'manual_review_tool.manual_review_queues': {
     id: string;
     name: string;
