@@ -325,6 +325,7 @@ export class ManualReviewToolService {
       pgQueryReadReplica,
       moderationConfigService,
       redis,
+      tracer,
     );
     this.jobEnrichment = new JobEnrichment(
       partialItemsService,

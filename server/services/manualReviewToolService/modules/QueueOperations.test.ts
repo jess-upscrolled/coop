@@ -1,5 +1,6 @@
 import fc from 'fast-check';
 import { uid } from 'uid';
+import { v1 as uuidv1 } from 'uuid';
 
 import createActions from '../../../test/fixtureHelpers/createActions.js';
 import createContentItemTypes from '../../../test/fixtureHelpers/createContentItemTypes.js';
@@ -74,8 +75,10 @@ describe('QueueOperations', () => {
 
       return {
         org,
+        user,
         actions,
         queue,
+        kyselyPg: deps.KyselyPg,
         mrtService: deps.ManualReviewToolService,
       };
     });
@@ -90,7 +93,6 @@ describe('QueueOperations', () => {
       expect(hiddenActions.length).toEqual(0);
     },
   );
-
   testWithQueueAndActions()(
     'Test hiding an action',
     async ({ org, queue, mrtService, actions }) => {
@@ -111,7 +113,6 @@ describe('QueueOperations', () => {
       expect(hiddenActions[0]).toEqual(actionToHide.id);
     },
   );
-
   testWithQueueAndActions()(
     'Test unhiding an action',
     async ({ org, queue, mrtService, actions }) => {
@@ -140,7 +141,6 @@ describe('QueueOperations', () => {
       expect(hiddenActions).not.toContain(actionToUnhide.id);
     },
   );
-
   testWithQueueAndActions()(
     'Test hiding some actions and unhiding some others',
     async ({ org, queue, mrtService, actions }) => {
@@ -254,7 +254,6 @@ describe('QueueOperations', () => {
       ).resolves.toBeUndefined();
     },
   );
-
   const testWithTwoOrgs = () =>
     makeTransactionalTestWithFixture(async ({ deps }) => {
       const buildOrg = async () => {
@@ -301,7 +300,6 @@ describe('QueueOperations', () => {
       expect(viewers.map((v) => v.userId)).not.toContain(attacker.user.id);
     },
   );
-
   testWithTwoOrgs()(
     'addAccessibleQueuesForUser must not grant access for a user in a different org',
     async ({ attacker, victim, mrtService }) => {
@@ -321,7 +319,6 @@ describe('QueueOperations', () => {
       expect(viewers.map((v) => v.userId)).not.toContain(victim.user.id);
     },
   );
-
   testWithTwoOrgs()(
     'removeAccessibleQueuesForUser must not revoke access for a queue in a different org',
     async ({ attacker, victim, mrtService }) => {
@@ -347,7 +344,6 @@ describe('QueueOperations', () => {
       expect(viewers.map((v) => v.userId)).toContain(victim.user.id);
     },
   );
-
   testWithTwoOrgs()(
     'removeAccessibleQueuesForUser must not revoke access for a user in a different org',
     async ({ attacker, victim, mrtService }) => {
@@ -428,5 +424,77 @@ describe('QueueOperations', () => {
       });
       expect(viewers.map((v) => v.userId)).not.toContain(victim.user.id);
     },
+  );
+
+  // Regression: RESTRICT FK must block queue deletion when routing rules reference it.
+  type QueueFixture = Parameters<
+    Parameters<ReturnType<typeof testWithQueueAndActions>>[1]
+  >[0];
+  type RuleTable =
+    | 'manual_review_tool.routing_rules'
+    | 'manual_review_tool.appeals_routing_rules';
+
+  const expectDeletionBlockedByRoutingRule = async (
+    { org, user, mrtService, kyselyPg }: QueueFixture,
+    table: RuleTable,
+    ruleName: string,
+  ) => {
+    const secondQueue = await mrtService.createManualReviewQueue({
+      name: `delete-test-queue-${uid()}`,
+      description: null,
+      userIds: [user.id],
+      hiddenActionIds: [],
+      isAppealsQueue: false,
+      invokedBy: {
+        userId: user.id,
+        permissions: [UserPermission.EDIT_MRT_QUEUES],
+        orgId: org.id,
+      },
+    });
+    await kyselyPg
+      .insertInto(table)
+      .values({
+        id: uuidv1(),
+        org_id: org.id,
+        name: ruleName,
+        description: null,
+        status: 'LIVE',
+        condition_set: { conditions: [], conjunction: 'AND' },
+        destination_queue_id: secondQueue.id,
+        creator_id: user.id,
+        sequence_number: 99,
+      })
+      .execute();
+    await expect(
+      mrtService.deleteManualReviewQueue(org.id, secondQueue.id),
+    ).rejects.toMatchObject({ name: 'QueueHasDependentRoutingRulesError' });
+    await kyselyPg
+      .deleteFrom(table)
+      .where('destination_queue_id', '=', secondQueue.id)
+      .execute();
+    await mrtService.deleteManualReviewQueueForTestsDO_NOT_USE(
+      org.id,
+      secondQueue.id,
+    );
+  };
+
+  testWithQueueAndActions()(
+    'deleteManualReviewQueue rejects when a routing rule references the queue',
+    async (ctx) =>
+      expectDeletionBlockedByRoutingRule(
+        ctx,
+        'manual_review_tool.routing_rules',
+        'block-rule',
+      ),
+  );
+
+  testWithQueueAndActions()(
+    'deleteManualReviewQueue rejects when an appeals routing rule references the queue',
+    async (ctx) =>
+      expectDeletionBlockedByRoutingRule(
+        ctx,
+        'manual_review_tool.appeals_routing_rules',
+        'block-appeals-rule',
+      ),
   );
 });
