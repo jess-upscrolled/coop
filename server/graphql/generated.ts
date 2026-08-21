@@ -1116,7 +1116,6 @@ export type GQLDerivedFieldCoopInputSourceInput = {
 };
 
 export const GQLDerivedFieldDerivationType = {
-  EnglishTranslation: 'ENGLISH_TRANSLATION',
   VideoTranscription: 'VIDEO_TRANSCRIPTION',
 } as const;
 

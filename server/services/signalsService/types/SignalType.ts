@@ -16,7 +16,6 @@ export type BuiltInSignalType = keyof typeof BuiltInSignalType;
 export type SignalType = keyof typeof SignalType;
 
 export const InternalSignalType = makeEnumLike([
-  'GOOGLE_CLOUD_TRANSLATE_MODEL',
   'OPEN_AI_WHISPER_TRANSCRIPTION',
 ]);
 
