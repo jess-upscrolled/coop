@@ -308,7 +308,6 @@ export default function ManualReviewQueueForm() {
 
     setQueueName(queue.name);
     setQueueDescription(queue.description ?? undefined);
-    setModeratorsWithAccess(sortedUsers.map((it) => it.id));
     setHiddenActionIds([...queue.hiddenActionIds]);
     setAutoCloseJobs(queue.autoCloseJobs);
     setIsAppealsQueue(queue.isAppealsQueue);
@@ -319,7 +318,11 @@ export default function ManualReviewQueueForm() {
     setClearReportsTriggerActionIds([
       ...(queue.clearReportsTriggerActionIds ?? []),
     ]);
-  }, [queue, queue?.autoCloseJobs, sortedUsers]);
+  }, [queue, queue?.autoCloseJobs]);
+
+  useEffect(() => {
+    setModeratorsWithAccess(sortedUsers.map((it) => it.id));
+  }, [sortedUsers]);
 
   if (queueQueryError || error) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error
