@@ -8,7 +8,10 @@ import {
 } from '../../graphql/datasources/userKyselyPersistence.js';
 import { type CombinedPg } from '../../services/combinedDbTypes.js';
 import { type LoginMethod } from '../../services/coreAppTables.js';
-import { UserRole, hashPassword } from '../../services/userManagementService/index.js';
+import {
+  hashPassword,
+  UserRole,
+} from '../../services/userManagementService/index.js';
 import { logErrorAndThrow } from '../utils.js';
 
 // SAML-only by default keeps the `password_null_when_not_present` CHECK
