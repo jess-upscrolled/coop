@@ -153,6 +153,7 @@ export default function PolicyForm() {
         <div className="font-semibold">Penalty</div>
         <Select
           className="w-40"
+          aria-label="Penalty"
           value={policyPenalty}
           onChange={(value: GQLUserPenaltySeverity) => setPolicyPenalty(value)}
         >
