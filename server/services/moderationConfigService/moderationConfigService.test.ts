@@ -1488,6 +1488,33 @@ describe('ModerationConfigService', () => {
       );
 
       testWithUserAndOrg(
+        'should default omitted penalty to NONE on create',
+        async ({ sutWithPrimary, org, user }) => {
+          const created = await sutWithPrimary.createPolicy({
+            orgId: org.id,
+            policy: {
+              name: 'Default Penalty Policy',
+              policyText: 'Policy text',
+              enforcementGuidelines: null,
+              policyType: null,
+              parentId: null,
+            },
+            invokedBy: {
+              orgId: org.id,
+              userId: user.id,
+              permissions: user.getPermissions(),
+            },
+          });
+
+          expect(created.penalty).toEqual(UserPenaltySeverity.NONE);
+
+          const fetched = await sutWithPrimary.getPolicies({ orgId: org.id });
+          expect(fetched).toHaveLength(1);
+          expect(fetched[0].penalty).toEqual(UserPenaltySeverity.NONE);
+        },
+      );
+
+      testWithUserAndOrg(
         'should persist and update policy penalty',
         async ({ sutWithPrimary, org, user }) => {
           const invokedBy = {
